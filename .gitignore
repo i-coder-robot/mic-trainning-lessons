@@ -13,3 +13,12 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+/account_srv/proto/pb/account.pb.go
+/accountHandler.log
+/go.sum
+/account_srv/main
+/.idea/mic-trainning-lessons.iml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/vcs.xml
+/.idea/.gitignore
