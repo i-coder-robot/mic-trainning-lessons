@@ -35,7 +35,6 @@ func (a *AccountServer) GetAccountList(ctx context.Context, req *pb.PagingReques
 	var accountList []model.Account
 	//result := internal.DB.Find(&accountList)
 	result := internal.DB.Scopes(Paginate(int(req.PageNo), int(req.PageSize))).Find(&accountList)
-	//result := internal.DB.Select("mobile,password,nick_name,gender,sum(id) as total").Scopes(Paginate(int(req.PageNo),int(req.PageSize))).Find(&accountList)
 
 	if result.Error != nil {
 		return nil, result.Error
