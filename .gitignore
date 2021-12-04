@@ -19,3 +19,12 @@
 /account_srv/main
 /data/
 /.idea/
+.DS_Store
+*.rdb
+*.png
+/nacos/cache/config/account.json*
+/nacos/cache/config/account.yaml*
+/nacos/cache/config/account_srv.json*
+/account_web/handler/accountHandler.log
+/nacos/log/nacos-sdk.log
+/nacos/log/nacos-sdk.log*

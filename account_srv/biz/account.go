@@ -5,10 +5,10 @@ import (
 	"crypto/md5"
 	"errors"
 	"github.com/anaskhan96/go-password-encoder"
-	"github.com/i-coder-robot/mic-trainning-lessons/account_srv/internal"
 	"github.com/i-coder-robot/mic-trainning-lessons/account_srv/model"
 	"github.com/i-coder-robot/mic-trainning-lessons/account_srv/proto/pb"
 	"github.com/i-coder-robot/mic-trainning-lessons/custom_error"
+	"github.com/i-coder-robot/mic-trainning-lessons/internal"
 	"gorm.io/gorm"
 )
 

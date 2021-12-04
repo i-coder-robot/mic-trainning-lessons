@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/hashicorp/consul/api"
 	"github.com/i-coder-robot/mic-trainning-lessons/account_srv/proto/pb"
 	"github.com/i-coder-robot/mic-trainning-lessons/account_web/req"
 	"github.com/i-coder-robot/mic-trainning-lessons/account_web/res"
 	"github.com/i-coder-robot/mic-trainning-lessons/custom_error"
+	"github.com/i-coder-robot/mic-trainning-lessons/internal"
 	"github.com/i-coder-robot/mic-trainning-lessons/jwt_op"
 	"github.com/i-coder-robot/mic-trainning-lessons/log"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"net/http"
 	"strconv"
@@ -33,22 +36,73 @@ func HandleError(err error) string {
 	return ""
 }
 
-func AccountListHandler(c *gin.Context) {
-	pageNoStr := c.DefaultQuery("pageNo", "1")
-	pageSizeStr := c.DefaultQuery("pageSize", "3")
-	conn, err := grpc.Dial("127.0.0.1:9095", grpc.WithInsecure())
+var accountSrvHost string
+var accountSrvPort int
+var client pb.AccountServiceClient
+
+func init() {
+	err := initConsul()
+	if err != nil {
+		panic(err)
+	}
+	err = initGrpcClient()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func initConsul() error {
+	defaultConfig := api.DefaultConfig()
+	consulAddr := fmt.Sprintf("%s:%d",
+		internal.AppConf.ConsulConfig.Host,
+		internal.AppConf.ConsulConfig.Port)
+	defaultConfig.Address = consulAddr
+	consulClient, err := api.NewClient(defaultConfig)
+	if err != nil {
+		zap.S().Error("AccountListHandler,创建consul的Client失败:" + err.Error())
+		//c.JSON(http.StatusInternalServerError,gin.H{
+		//	"msg":"服务端内部错误",
+		//})
+		return err
+	}
+
+	serviceList, err := consulClient.Agent().ServicesWithFilter(`Service=="account_srv"`)
+	if err != nil {
+		zap.S().Error("AccountListHandler,创建consul获取服务列表失败:" + err.Error())
+		//c.JSON(http.StatusInternalServerError,gin.H{
+		//	"msg":"服务端内部错误",
+		//})
+		return err
+	}
+	for _, v := range serviceList {
+		accountSrvHost = v.Address
+		accountSrvPort = v.Port
+	}
+	return nil
+}
+
+func initGrpcClient() error {
+	grpcAddr := fmt.Sprintf("%s:%d", accountSrvHost, accountSrvPort)
+	conn, err := grpc.Dial(grpcAddr, grpc.WithInsecure())
 	if err != nil {
 		s := fmt.Sprintf("AccountListHandler-GRPC拨号失败:%s", err.Error())
 		log.Logger.Info(s)
-		e := HandleError(err)
-		c.JSON(http.StatusOK, gin.H{
-			"msg": e,
-		})
-		return
+		//e := HandleError(err)
+		//c.JSON(http.StatusOK, gin.H{
+		//	"msg": e,
+		//})
+		return err
 	}
+	client = pb.NewAccountServiceClient(conn)
+	return nil
+}
+
+func AccountListHandler(c *gin.Context) {
+	pageNoStr := c.DefaultQuery("pageNo", "1")
+	pageSizeStr := c.DefaultQuery("pageSize", "3")
 	pageNo, _ := strconv.ParseInt(pageNoStr, 10, 32)
 	pageSize, _ := strconv.ParseInt(pageSizeStr, 10, 32)
-	client := pb.NewAccountServiceClient(conn)
+
 	r, err := client.GetAccountList(context.Background(), &pb.PagingRequest{
 		PageNo:   int32(pageNo),
 		PageSize: int32(pageSize),
@@ -165,3 +219,9 @@ func LoginByPasswordHandler(c *gin.Context) {
 //eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 //.eyJleHAiOjE2Mzk0NjU4MzYsIm5iZiI6MTYzNjg3MzgzNiwiSUQiOjUsIk5pY2tOYW1lIjoiMTMwMDAwMDAwMDQiLCJBdXRob3JpdHlJZCI6MX0
 //.47YspOTF5kGO84KMN56ksJzC6sAcMCtqp13D00X6ZBI
+
+func HealthHandler(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"msg": "ok",
+	})
+}

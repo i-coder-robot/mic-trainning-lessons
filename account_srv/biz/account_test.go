@@ -3,8 +3,8 @@ package biz
 import (
 	"context"
 	"fmt"
-	"github.com/i-coder-robot/mic-trainning-lessons/account_srv/internal"
 	"github.com/i-coder-robot/mic-trainning-lessons/account_srv/proto/pb"
+	"github.com/i-coder-robot/mic-trainning-lessons/internal"
 	"testing"
 )
 
