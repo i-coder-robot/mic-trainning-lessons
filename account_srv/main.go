@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/hashicorp/consul/api"
 	"github.com/i-coder-robot/mic-trainning-lessons/account_srv/biz"
 	"github.com/i-coder-robot/mic-trainning-lessons/account_srv/proto/pb"
 	"github.com/i-coder-robot/mic-trainning-lessons/internal"
+	"github.com/i-coder-robot/mic-trainning-lessons/util"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -22,7 +24,9 @@ func main() {
 	//port := flag.Int("port", 9095, "输入端口")
 	//flag.Parse()
 	//addr := fmt.Sprintf("%s:%d", *ip, *port)
-	addr := fmt.Sprintf("%s:%d", internal.AppConf.AccountSrvConfig.Host, internal.AppConf.AccountSrvConfig.Port)
+	port := util.GenRandomPort()
+
+	addr := fmt.Sprintf("%s:%d", internal.AppConf.AccountSrvConfig.Host, port)
 	server := grpc.NewServer()
 	pb.RegisterAccountServiceServer(server, &biz.AccountServer{})
 	listen, err := net.Listen("tcp", addr)
@@ -39,18 +43,18 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	checkAddr := fmt.Sprintf("%s:%d", internal.AppConf.AccountSrvConfig.Host, internal.AppConf.AccountSrvConfig.Port)
+	checkAddr := fmt.Sprintf("%s:%d", internal.AppConf.AccountSrvConfig.Host, port)
 	check := &api.AgentServiceCheck{
 		GRPC:                           checkAddr,
 		Timeout:                        "3s",
 		Interval:                       "1s",
 		DeregisterCriticalServiceAfter: "5s",
 	}
-	//randUUID:=uuid.New().String()
+	randUUID := uuid.New().String()
 	reg := api.AgentServiceRegistration{
 		Name:    internal.AppConf.AccountSrvConfig.SrvName,
-		ID:      internal.AppConf.AccountSrvConfig.SrvName,
-		Port:    internal.AppConf.AccountSrvConfig.Port,
+		ID:      randUUID,
+		Port:    port,
 		Tags:    internal.AppConf.AccountSrvConfig.Tags,
 		Address: internal.AppConf.AccountSrvConfig.Host,
 		Check:   check,
@@ -59,6 +63,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println(fmt.Sprintf("%s启动在%d", randUUID, port))
 	err = server.Serve(listen)
 	if err != nil {
 		panic(err)

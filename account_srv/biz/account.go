@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/md5"
 	"errors"
+	"fmt"
 	"github.com/anaskhan96/go-password-encoder"
 	"github.com/i-coder-robot/mic-trainning-lessons/account_srv/model"
 	"github.com/i-coder-robot/mic-trainning-lessons/account_srv/proto/pb"
@@ -45,6 +46,7 @@ func (a *AccountServer) GetAccountList(ctx context.Context, req *pb.PagingReques
 		accountRes := Model2Pb(account)
 		accountListRes.AccountList = append(accountListRes.AccountList, accountRes)
 	}
+	fmt.Println("GetAccountList Invoked...")
 	return accountListRes, nil
 
 }

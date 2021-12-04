@@ -1,0 +1,38 @@
+host: '192.168.0.106'
+port: 8848
+namespace: '3a6aa0c4-b492-4624-bb59-16cc3f27416f'
+dataid: 'account.json'
+group: 'dev'
+
+
+#debug: false
+#db:
+#  host: '192.168.0.106'
+#  port: 3308
+#  dbName: 'happy_account_mic_traning'
+#  userName: 'root'
+#  password: '123456'
+#
+#redis:
+#  host: '192.168.0.106'
+#  port: 6379
+#
+#consul:
+#  host: '192.168.0.106'
+#  port: 8500
+#
+#account_srv:
+#  srvName: "account_srv"
+#  host: '192.168.0.106'
+#  port: 9095
+#  tags:
+#    - happy
+#    - account_srv
+#
+#account_web:
+#  srvName: "account_web"
+#  host: '192.168.0.106'
+#  port: 8081
+#  tags:
+#    - happy
+#    - account_web
