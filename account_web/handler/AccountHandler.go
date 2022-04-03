@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/hashicorp/consul/api"
 	"github.com/i-coder-robot/mic-trainning-lessons/account_srv/proto/pb"
 	"github.com/i-coder-robot/mic-trainning-lessons/account_web/req"
 	"github.com/i-coder-robot/mic-trainning-lessons/account_web/res"
@@ -13,6 +12,7 @@ import (
 	"github.com/i-coder-robot/mic-trainning-lessons/internal"
 	"github.com/i-coder-robot/mic-trainning-lessons/jwt_op"
 	"github.com/i-coder-robot/mic-trainning-lessons/log"
+	_ "github.com/mbobakov/grpc-consul-resolver"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"net/http"
@@ -36,54 +36,25 @@ func HandleError(err error) string {
 	return ""
 }
 
-var accountSrvHost string
-var accountSrvPort int
 var client pb.AccountServiceClient
 
 func init() {
-	err := initConsul()
+	err := initGrpcClient()
 	if err != nil {
 		panic(err)
 	}
-	err = initGrpcClient()
-	if err != nil {
-		panic(err)
-	}
-}
-
-func initConsul() error {
-	defaultConfig := api.DefaultConfig()
-	consulAddr := fmt.Sprintf("%s:%d",
-		internal.AppConf.ConsulConfig.Host,
-		internal.AppConf.ConsulConfig.Port)
-	defaultConfig.Address = consulAddr
-	consulClient, err := api.NewClient(defaultConfig)
-	if err != nil {
-		zap.S().Error("AccountListHandler,创建consul的Client失败:" + err.Error())
-		//c.JSON(http.StatusInternalServerError,gin.H{
-		//	"msg":"服务端内部错误",
-		//})
-		return err
-	}
-
-	serviceList, err := consulClient.Agent().ServicesWithFilter(`Service=="account_srv"`)
-	if err != nil {
-		zap.S().Error("AccountListHandler,创建consul获取服务列表失败:" + err.Error())
-		//c.JSON(http.StatusInternalServerError,gin.H{
-		//	"msg":"服务端内部错误",
-		//})
-		return err
-	}
-	for _, v := range serviceList {
-		accountSrvHost = v.Address
-		accountSrvPort = v.Port
-	}
-	return nil
 }
 
 func initGrpcClient() error {
-	grpcAddr := fmt.Sprintf("%s:%d", accountSrvHost, accountSrvPort)
-	conn, err := grpc.Dial(grpcAddr, grpc.WithInsecure())
+	addr := fmt.Sprintf("%s:%d", internal.AppConf.ConsulConfig.Host, internal.AppConf.ConsulConfig.Port)
+	dialAddr := fmt.Sprintf("consul://%s/%s?wait=14", addr, internal.AppConf.AccountSrvConfig.SrvName)
+	conn, err := grpc.Dial(dialAddr, grpc.WithInsecure(), grpc.WithDefaultServiceConfig(`{"loadBalancingPolicy": "round_robin"}`))
+	if err != nil {
+		zap.S().Fatal(err)
+	}
+
+	//grpcAddr := fmt.Sprintf("%s:%d", accountSrvHost, accountSrvPort)
+	//conn, err := grpc.Dial(grpcAddr, grpc.WithInsecure())
 	if err != nil {
 		s := fmt.Sprintf("AccountListHandler-GRPC拨号失败:%s", err.Error())
 		log.Logger.Info(s)
