@@ -21,4 +21,5 @@ type AppConfig struct {
 	AccountSrvConfig AccountSrvConfig `mapstructure:"account_srv" json:"account_srv"`
 	AccountWebConfig AccountWebConfig `mapstructure:"account_web" json:"account_web"`
 	JWTConfig        JWTConfig        `mapstructure:"jwt" json:"jwt"`
+	Debug            bool             `mapstructure:"debug" json:"debug"`
 }
