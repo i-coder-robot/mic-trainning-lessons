@@ -20,7 +20,7 @@ func init() {
 }
 
 func main() {
-	ip := flag.String("ip", "192.168.0.106", "输入Ip")
+	ip := flag.String("ip", "192.168.0.107", "输入Ip")
 	port := flag.Int("port", 8081, "输入端口")
 	flag.Parse()
 	addr := fmt.Sprintf("%s:%d", *ip, *port)
