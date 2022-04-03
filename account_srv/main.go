@@ -25,7 +25,9 @@ func main() {
 	//flag.Parse()
 	//addr := fmt.Sprintf("%s:%d", *ip, *port)
 	port := util.GenRandomPort()
-
+	if internal.AppConf.Debug {
+		port = internal.AppConf.AccountSrvConfig.Port
+	}
 	addr := fmt.Sprintf("%s:%d", internal.AppConf.AccountSrvConfig.Host, port)
 	server := grpc.NewServer()
 	pb.RegisterAccountServiceServer(server, &biz.AccountServer{})
